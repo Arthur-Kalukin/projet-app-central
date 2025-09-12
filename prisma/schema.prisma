@@ -1,0 +1,70 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  client
+  employe
+  admin
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  role      Role
+  clientId  String?
+  client    Client?  @relation(fields: [clientId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model Client {
+  id        String          @id @default(cuid())
+  name      String
+  services  ClientService[]
+  points    Point[]
+  users     User[]
+}
+
+model Service {
+  id        String          @id @default(cuid())
+  name      String          @unique
+  clients   ClientService[]
+  points    Point[]
+}
+
+model ClientService {
+  clientId  String
+  serviceId String
+  client    Client  @relation(fields: [clientId], references: [id])
+  service   Service @relation(fields: [serviceId], references: [id])
+  @@id([clientId, serviceId])
+}
+
+model Point {
+  id         String  @id @default(cuid())
+  code       String  @unique
+  name       String
+  address    String
+  serviceId  String
+  clientId   String
+  service    Service @relation(fields: [serviceId], references: [id])
+  client     Client  @relation(fields: [clientId], references: [id])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  userEmail  String?
+  action     String
+  targetType String?
+  targetId   String?
+  details    String?
+  ip         String?
+  createdAt  DateTime @default(now())
+}
